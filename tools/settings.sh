@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2021 University of Cambridge
 # All rights reserved.
 #
@@ -26,11 +25,10 @@
 ### User defined
 export PYTHON_BNRY=$(command -v python3)
 
-export OFO_ROOT=${HOME}/workspace/opportunistic-fpga-offload
-export NFPLUS_FOLDER=${OFO_ROOT}/third_party/NetFPGA-PLUS
+export NFPLUS_FOLDER=${HOME}/workspace/FPGA-Sketch
 
 export BOARD_NAME=au280
-export BOARD_REPO=${OFO_ROOT}/third_party/open-nic-shell/board_files
+export BOARD_REPO=${NFPLUS_FOLDER}/tools/board_files
 
 export NF_PROJECT_NAME=reference_nic
 
@@ -43,26 +41,6 @@ export NF_WORK_DIR=${NFPLUS_FOLDER}/local_test
 export PYTHONPATH=.:${NFPLUS_FOLDER}/tools/scripts/:${NF_DESIGN_DIR}/lib/Python:${NFPLUS_FOLDER}/tools/scripts/NFTest
 export DRIVER_FOLDER=${NFPLUS_FOLDER}/lib/sw/std/driver/${DRIVER_NAME}
 export APPS_FOLDER=${NFPLUS_FOLDER}/lib/sw/std/apps/${DRIVER_NAME}
-
-
-# Check and import Xilinx Shell
-# create_symlink() {
-#     local source_dir="$1"
-#     local target_link="$2"
-
-#     if [ -d "$source_dir" ]; then
-#         if [ -L "$target_link" ]; then
-#             rm "$target_link"
-#         fi
-#         ln -s "$source_dir" "$target_link"
-#     else
-#         echo "Error: $source_dir is not found."
-#         return -1
-#     fi
-# }
-# create_symlink "${OFO_ROOT}/third_party/open-nic-shell" "${NFPLUS_FOLDER}/hw/lib/xilinx/xilinx_shell_v1_0_0/open-nic-shell" || return -1
-# create_symlink "${OFO_ROOT}/third_party/open-nic-driver" "${NFPLUS_FOLDER}/sw/driver/open-nic-driver" || return -1
-# echo "[ok]    Xilinx shell and driver are imported with symbolic links."
 
 # Check python3
 [ -z "$PYTHON_BNRY" ] && echo "Error: python3 is missing." && exit 1
