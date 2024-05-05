@@ -1,0 +1,13 @@
+.git_updated
+*.orig
+
+*.o
+*.o.*
+*.mk
+*.ko
+*.ko.*
+*.symvers
+*.order
+*.mod.*
+
+.tmp_versions/
