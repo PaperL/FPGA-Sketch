@@ -9,7 +9,7 @@
 // Stanford University and the University of Cambridge Computer Laboratory
 // under National Science Foundation under Grant No. CNS-0855268,
 // the University of Cambridge Computer Laboratory under EPSRC INTERNET Project EP/H040536/1 and
-// by the University of Cambridge Computer Laboratory under DARPA/AFRL contract FA8750-11-C-0249 ("MRC2"), 
+// by the University of Cambridge Computer Laboratory under DARPA/AFRL contract FA8750-11-C-0249 ("MRC2"),
 // as part of the DARPA MRC research programme,
 // and by the University of Cambridge Computer Laboratory under EPSRC EARL Project
 // EP/P025374/1 alongside support from Xilinx Inc.
@@ -137,6 +137,7 @@ module nic_output_port_lookup #(
 
   // Sampling logic to select 1 packet per 128
   always @(posedge axis_aclk) begin
+    integer i, j;
     if (!axis_resetn) begin
       packet_sample_count <= 0;
       current_row <= 0;
@@ -224,7 +225,7 @@ module nic_output_port_lookup #(
   wire  [          31:0] ip_dst = m_axis_tdata[240+31:240];  // Dst field of IP packet
   wire  [          15:0] udp_sp = m_axis_tdata[272+15:272];
   wire  [          15:0] udp_dp = m_axis_tdata[288+15:288];
-  
+
   wire                   is_icmp = out_pkt_begin && (ip_protocol == 'h1);
   wire                   is_tgtip = out_pkt_begin && (ip_dst == ip2cpu_tgtipaddr_reg);
 

@@ -13,7 +13,7 @@ module hash #(parameter index = 0) (
       hash <= input_data[9:0] ^ input_data[19:10] ^ input_data[29:20] ^
                input_data[39:30] ^ input_data[49:40] ^ input_data[59:50] ^
                input_data[69:60] ^ input_data[79:70] ^ input_data[89:80] ^
-               input_data[99:90] ^ input_data[103:100] << 6; 
+               input_data[99:90] ^ input_data[103:100] << 6;
 
 endmodule
 

@@ -74,6 +74,10 @@ clean: libclean toolsclean projectsclean swclean
 	@find . -type f -name '*.coe' -delete
 	@find . -type f -name '*.mif' -delete
 
+nic_lookup:
+	make -C $(LIB_HW_DIR)/std/nic_output_port_lookup_v1_0_0/ clean
+	make -C $(LIB_HW_DIR)/std/nic_output_port_lookup_v1_0_0/
+
 cores:
 	make -C $(LIB_HW_DIR)/xilinx/xilinx_shell_v1_0_0/
 	make -C $(LIB_HW_DIR)/xilinx/cam_v1_1_0/
