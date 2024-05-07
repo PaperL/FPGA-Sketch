@@ -110,6 +110,51 @@ module nic_output_port_lookup #(
     output                              S_AXI_AWREADY
 );
 
+  // * Sketch
+  // Parameters for the count-min sketch and sampling
+  localparam ROWS = 4;
+  localparam WIDTH = 1024;
+  localparam integer SAMPLE_RATE = 128;
+
+  reg [31:0] sketch[0:ROWS-1][0:WIDTH-1];  // Declaration of the sketch
+  reg [6:0] packet_sample_count = 0;  // Packet counter for sampling
+  reg [1:0] current_row = 0;  // Current row to update in the sketch
+  wire [9:0] hash_result[ROWS-1:0];  // Store hash result for each row
+
+  // Instantiate hash function units for each row
+  wire [103:0] combined_input_data = {ip_protocol, ip_dst, ip_src, udp_sp, udp_dp}; // 8 + 32 + 32 + 16 + 16 = 104 bits
+  generate
+    genvar i;
+    for (i = 0; i < ROWS; i++) begin : hash_gen
+      hash #(.index(i * 10)) hash_instance (
+        .input_data(combined_input_data),
+        .reset(~axis_resetn),
+        .clock(axis_aclk),
+        .hash(hash_result[i])
+      );
+    end
+  endgenerate
+
+  // Sampling logic to select 1 packet per 128
+  always @(posedge axis_aclk) begin
+    if (!axis_resetn) begin
+      packet_sample_count <= 0;
+      current_row <= 0;
+      for (i = 0; i < ROWS; i++) for (j = 0; j < WIDTH; j++) sketch[i][j] <= 0;
+    end else if (out_pkt_begin) begin
+      if (packet_sample_count == SAMPLE_RATE-1) begin
+        // Update the sketch
+        sketch[current_row][hash_result[current_row] % WIDTH] <= sketch[current_row][hash_result[current_row] % WIDTH] + 1;
+        current_row <= (current_row + 1) % ROWS;  // Move to next row
+        packet_sample_count <= 0;  // Reset counter
+      end else begin
+        packet_sample_count <= packet_sample_count + 1;
+      end
+    end
+  end
+
+
+
   // -------- Module Registers -----------
 
   reg  [         `REG_ID_BITS] id_reg;
@@ -181,9 +226,15 @@ module nic_output_port_lookup #(
   wire                   reset_registers = reset_reg[4];
 
   wire  [           7:0] ip_protocol = m_axis_tdata[184+7:184];  // Protocol filed of IP packet
-  wire                   is_icmp = out_pkt_begin && (ip_protocol == 'h1);
+  wire  [          31:0] ip_src = m_axis_tdata[208+31:208];
   wire  [          31:0] ip_dst = m_axis_tdata[240+31:240];  // Dst field of IP packet
+  wire  [          15:0] udp_sp = m_axis_tdata[272+15:272];
+  wire  [          15:0] udp_dp = m_axis_tdata[288+15:288];
+  
+  wire                   is_icmp = out_pkt_begin && (ip_protocol == 'h1);
   wire                   is_tgtip = out_pkt_begin && (ip_dst == ip2cpu_tgtipaddr_reg);
+
+
   logic [ `FIELD_IDLBIN] size_idlbin;
   logic [`FIELD_IDLBOUT] size_idlbout;
   wire  [ `FIELD_IDLBIN] idlbin_added = idlbin_reg + size_idlbin;

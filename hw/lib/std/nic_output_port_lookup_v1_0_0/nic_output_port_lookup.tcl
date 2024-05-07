@@ -56,6 +56,7 @@ puts "Creating Output Port Lookup IP"
 read_verilog "./hdl/output_port_lookup_cpu_regs_defines.v"
 read_verilog "./hdl/output_port_lookup_cpu_regs.sv"
 read_verilog "./hdl/nic_output_port_lookup.sv"
+read_verilog "./hdl/hash.sv"
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
 ipx::package_project

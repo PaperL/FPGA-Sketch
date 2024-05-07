@@ -2,6 +2,7 @@
 local_*
 
 .vscode
+.DS_store
 
 # FPGA Project
 *.bit
