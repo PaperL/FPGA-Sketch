@@ -134,6 +134,38 @@ def make_IP_pkt(pkt_len = 60, **kwargs):
     return pkt
 
 ############################
+# Function: make_UDP_hdr
+# Keyword Arguments: src_port, dst_port, len
+# Description: creates and returns a scapy UDP layer 
+#              if keyword arguments are not specified, scapy defaults are used
+############################
+
+def make_UDP_hdr(src_port = None, dst_port = None, udp_len = None, **kwargs):
+    hdr = scapy.UDP()
+    if src_port:
+        hdr.sport = src_port
+    if dst_port:
+        hdr.dport = dst_port
+    if udp_len:
+        hdr.len = udp_len
+    return hdr
+
+############################
+# Function: make_UDP_pkt
+# Keyword Arguments: src_MAC, dst_MAC, EtherType
+#                    src_IP, dst_IP, TTL
+#                    src_port, dst_port, len
+#                    pkt_len
+# Description: creates and returns a complete UDP packet of length pkt_len
+############################
+
+def make_UDP_pkt(pkt_len = 60, **kwargs):
+    if pkt_len < 60:
+        pkt_len = 60
+    pkt = make_MAC_hdr(**kwargs)/make_IP_hdr(**kwargs)/make_UDP_hdr(udp_len=pkt_len-42, **kwargs)/generate_load(pkt_len - 42) # Total header length is 42 for MAC + IP + UDP
+    return pkt
+
+############################
 # Function: make_VLAN_pkt
 # Keyword Arguments: src_MAC, dst_MAC, EtherType
 #                    src_IP, dst_IP, TTL
