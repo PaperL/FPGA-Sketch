@@ -101,17 +101,3 @@
 `define REG_TGTIPOUTLST_WIDTH   32
 `define REG_TGTIPOUTLST_DEFAULT 32'h0
 `define REG_TGTIPOUTLST_ADDR    32'h28
-
-`define REG_IDLBIN_BITS      31:0
-`define FIELD_IDLBIN         30:0
-`define FIELD_IDLBINOVF      31
-`define REG_IDLBIN_WIDTH     32
-`define REG_IDLBIN_DEFAULT   32'h0
-`define REG_IDLBIN_ADDR      32'h2C
-
-`define REG_IDLBOUT_BITS     31:0
-`define FIELD_IDLBOUT        30:0
-`define FIELD_IDLBOUTOVF     31
-`define REG_IDLBOUT_WIDTH    32
-`define REG_IDLBOUT_DEFAULT  32'h0
-`define REG_IDLBOUT_ADDR     32'h30

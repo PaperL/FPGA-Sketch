@@ -69,10 +69,6 @@ module output_port_lookup_cpu_regs #(
     input      [   `REG_TGTIPOUT_BITS] tgtipout_reg,
     output reg                         tgtipout_reg_clear,
     input      [`REG_TGTIPOUTLST_BITS] tgtipoutlst_reg,
-    input      [     `REG_IDLBIN_BITS] idlbin_reg,
-    output reg                         idlbin_reg_clear,
-    input      [    `REG_IDLBOUT_BITS] idlbout_reg,
-    output reg                         idlbout_reg_clear,
 
     // AXI Lite ports
     input                               S_AXI_ACLK,
@@ -118,8 +114,6 @@ module output_port_lookup_cpu_regs #(
   reg                                pktout_reg_clear_d;
   reg                                icmpout_reg_clear_d;
   reg                                tgtipout_reg_clear_d;
-  reg                                idlbin_reg_clear_d;
-  reg                                idlbout_reg_clear_d;
 
   // I/O Connections assignments
   assign S_AXI_AWREADY = axi_awready;
@@ -358,8 +352,6 @@ module output_port_lookup_cpu_regs #(
       `REG_TGTIPADDR_ADDR:   reg_data_out[`REG_TGTIPADDR_BITS] = ip2cpu_tgtipaddr_reg;
       `REG_TGTIPOUT_ADDR:    reg_data_out[`REG_TGTIPOUT_BITS] = tgtipout_reg;
       `REG_TGTIPOUTLST_ADDR: reg_data_out[`REG_TGTIPOUTLST_BITS] = tgtipoutlst_reg;
-      `REG_IDLBIN_ADDR:      reg_data_out[`REG_IDLBIN_BITS] = idlbin_reg;
-      `REG_IDLBOUT_ADDR:     reg_data_out[`REG_IDLBOUT_BITS] = idlbout_reg;
       default:               reg_data_out[31:0] = 32'hFEE1DEAD;  //Default return value
     endcase
   end  // end of assigning data to IP2Bus_Data bus
@@ -378,10 +370,6 @@ module output_port_lookup_cpu_regs #(
       icmpout_reg_clear_d  <= #1 1'b0;
       tgtipout_reg_clear   <= #1 1'b0;
       tgtipout_reg_clear_d <= #1 1'b0;
-      idlbin_reg_clear     <= #1 1'b0;
-      idlbin_reg_clear_d   <= #1 1'b0;
-      idlbout_reg_clear    <= #1 1'b0;
-      idlbout_reg_clear_d  <= #1 1'b0;
     end else begin
       pktin_reg_clear <= #1 pktin_reg_clear_d;
       pktin_reg_clear_d <= #1 (reg_rden && (axi_araddr == `REG_PKTIN_ADDR)) ? 1'b1 : 1'b0;
@@ -391,10 +379,6 @@ module output_port_lookup_cpu_regs #(
       icmpout_reg_clear_d <= #1 (reg_rden && (axi_araddr == `REG_ICMPOUT_ADDR)) ? 1'b1 : 1'b0;
       tgtipout_reg_clear <= #1 tgtipout_reg_clear_d;
       tgtipout_reg_clear_d <= #1 (reg_rden && (axi_araddr == `REG_TGTIPOUT_ADDR)) ? 1'b1 : 1'b0;
-      idlbin_reg_clear <= #1 idlbin_reg_clear_d;
-      idlbin_reg_clear_d <= #1 (reg_rden && (axi_araddr == `REG_IDLBIN_ADDR)) ? 1'b1 : 1'b0;
-      idlbout_reg_clear <= #1 idlbout_reg_clear_d;
-      idlbout_reg_clear_d <= #1 (reg_rden && (axi_araddr == `REG_IDLBOUT_ADDR)) ? 1'b1 : 1'b0;
     end
 
 

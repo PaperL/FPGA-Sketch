@@ -184,12 +184,6 @@ module nic_output_port_lookup #(
 
   reg  [`REG_TGTIPOUTLST_BITS] tgtipoutlst_reg;
 
-  reg  [     `REG_IDLBIN_BITS] idlbin_reg;
-  wire                         idlbin_reg_clear;
-
-  reg  [    `REG_IDLBOUT_BITS] idlbout_reg;
-  wire                         idlbout_reg_clear;
-
   // -------- Internal Params ------------
 
   localparam int unsigned ModuleHeader = 0;
@@ -234,12 +228,6 @@ module nic_output_port_lookup #(
   wire                   is_icmp = out_pkt_begin && (ip_protocol == 'h1);
   wire                   is_tgtip = out_pkt_begin && (ip_dst == ip2cpu_tgtipaddr_reg);
 
-
-  logic [ `FIELD_IDLBIN] size_idlbin;
-  logic [`FIELD_IDLBOUT] size_idlbout;
-  wire  [ `FIELD_IDLBIN] idlbin_added = idlbin_reg + size_idlbin;
-  wire  [`FIELD_IDLBOUT] idlbout_added = idlbout_reg + size_idlbout;
-
   // ------------ Modules ----------------
 
   fallthrough_small_fifo #(
@@ -265,21 +253,6 @@ module nic_output_port_lookup #(
   always_comb begin
     m_axis_tuser = tuser_fifo;
     state_next   = state;
-
-    // Wrong code: size_idlbin = in_pkt_end ? $countones(~s_axis_tkeep) : 'h0;
-    // Here $countones is compile-time static and not synthesizable
-    size_idlbin  = 31'b0;  // init
-    size_idlbout = 31'b0;
-    if (in_pkt_end) begin
-      foreach (s_axis_tkeep[idx]) begin
-        size_idlbin += {30'b0, ~s_axis_tkeep[idx]}; // Dirty, please use tuser
-      end
-    end
-    if (out_pkt_end) begin
-      foreach (m_axis_tkeep[idx]) begin
-        size_idlbout += {30'b0, ~m_axis_tkeep[idx]};
-      end
-    end
 
     case (state)
       ModuleHeader: begin
@@ -370,10 +343,6 @@ module nic_output_port_lookup #(
       .tgtipout_reg        (tgtipout_reg),
       .tgtipout_reg_clear  (tgtipout_reg_clear),
       .tgtipoutlst_reg     (tgtipoutlst_reg),
-      .idlbin_reg          (idlbin_reg),
-      .idlbin_reg_clear    (idlbin_reg_clear),
-      .idlbout_reg         (idlbout_reg),
-      .idlbout_reg_clear   (idlbout_reg_clear),
 
       // Global Registers - user can select if to use
       .cpu_resetn_soft(),  // software reset, after cpu module
@@ -395,8 +364,6 @@ module nic_output_port_lookup #(
       ip2cpu_tgtipaddr_reg <= #1 `REG_TGTIPADDR_DEFAULT;
       tgtipout_reg         <= #1 `REG_TGTIPOUT_DEFAULT;
       tgtipoutlst_reg      <= #1 `REG_TGTIPOUTLST_DEFAULT;
-      idlbin_reg           <= #1 `REG_IDLBIN_DEFAULT;
-      idlbout_reg          <= #1 `REG_IDLBOUT_DEFAULT;
     end else begin
       ip2cpu_flip_reg <= #1 ~cpu2ip_flip_reg;
       ip2cpu_debug_reg <= #1 `REG_DEBUG_DEFAULT + cpu2ip_debug_reg;
@@ -426,16 +393,6 @@ module nic_output_port_lookup #(
       tgtipoutlst_reg <= #1 clear_counters ? 'h0  // Clear
       : (ip2cpu_tgtipaddr_reg != cpu2ip_tgtipaddr_reg) ? tgtipout_reg // Update on target IP change
       : tgtipoutlst_reg;
-
-      idlbin_reg <= #1 clear_counters | idlbin_reg_clear ? 'h0 : {  // Clear
-      idlbin_added < idlbin_reg[`FIELD_IDLBIN] ? 1'b1 : idlbin_reg[`FIELD_IDLBINOVF],
-      idlbin_added[`FIELD_IDLBIN] // Counter
-      };
-
-      idlbout_reg <= #1 clear_counters | idlbout_reg_clear ? 'h0 : {  // Clear
-      idlbout_added < idlbout_reg[`FIELD_IDLBOUT] ? 1'b1 : idlbout_reg[`FIELD_IDLBOUTOVF],
-      idlbout_added[`FIELD_IDLBOUT] // Counter
-      };
 
     end
   end
