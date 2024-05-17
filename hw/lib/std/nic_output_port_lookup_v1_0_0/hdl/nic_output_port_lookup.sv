@@ -185,6 +185,11 @@ module nic_output_port_lookup #(
 
   reg  [`REG_TGTIPOUTLST_BITS] tgtipoutlst_reg;
 
+  reg  [ `REG_TGTUDPPORT_BITS] ip2cpu_tgtudpport_reg;
+  wire [ `REG_TGTUDPPORT_BITS] cpu2ip_tgtudpport_reg;
+  
+  reg  [  `REG_TGTUDPCNT_BITS] tgtudpcnt_reg;
+
   // -------- Internal Params ------------
 
   localparam int unsigned ModuleHeader = 0;
@@ -228,6 +233,12 @@ module nic_output_port_lookup #(
 
   wire                   is_icmp = out_pkt_begin && (ip_protocol == 'h1);
   wire                   is_tgtip = out_pkt_begin && (ip_dst == ip2cpu_tgtipaddr_reg);
+
+  wire                   is_udp = out_pkt_begin && (ip_protocol == 'h11);
+  wire                   is_tgt_udp_src_ip = (ip_src == 'hC0A80001);
+  wire                   is_tgt_udp_dst_ip = (ip_dst == 'hC0A80101);
+  wire                   is_tgt_udp_sp = (udp_sp == 'd12345);
+  wire [103:0]           tgt_flow = {8'h11, 32'hC0A80101, 32'hC0A80001, 16'd12345, ip2cpu_tgtudpport_reg};
 
   // ------------ Modules ----------------
 
@@ -303,47 +314,50 @@ module nic_output_port_lookup #(
       .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH)
   ) opl_cpu_regs_inst (
       // General ports
-      .clk                 (axis_aclk),
-      .resetn              (axis_resetn),
+      .clk                  (axis_aclk),
+      .resetn               (axis_resetn),
       // AXI Lite ports
-      .S_AXI_ACLK          (S_AXI_ACLK),
-      .S_AXI_ARESETN       (S_AXI_ARESETN),
-      .S_AXI_AWADDR        (S_AXI_AWADDR),
-      .S_AXI_AWVALID       (S_AXI_AWVALID),
-      .S_AXI_WDATA         (S_AXI_WDATA),
-      .S_AXI_WSTRB         (S_AXI_WSTRB),
-      .S_AXI_WVALID        (S_AXI_WVALID),
-      .S_AXI_BREADY        (S_AXI_BREADY),
-      .S_AXI_ARADDR        (S_AXI_ARADDR),
-      .S_AXI_ARVALID       (S_AXI_ARVALID),
-      .S_AXI_RREADY        (S_AXI_RREADY),
-      .S_AXI_ARREADY       (S_AXI_ARREADY),
-      .S_AXI_RDATA         (S_AXI_RDATA),
-      .S_AXI_RRESP         (S_AXI_RRESP),
-      .S_AXI_RVALID        (S_AXI_RVALID),
-      .S_AXI_WREADY        (S_AXI_WREADY),
-      .S_AXI_BRESP         (S_AXI_BRESP),
-      .S_AXI_BVALID        (S_AXI_BVALID),
-      .S_AXI_AWREADY       (S_AXI_AWREADY),
+      .S_AXI_ACLK           (S_AXI_ACLK),
+      .S_AXI_ARESETN        (S_AXI_ARESETN),
+      .S_AXI_AWADDR         (S_AXI_AWADDR),
+      .S_AXI_AWVALID        (S_AXI_AWVALID),
+      .S_AXI_WDATA          (S_AXI_WDATA),
+      .S_AXI_WSTRB          (S_AXI_WSTRB),
+      .S_AXI_WVALID         (S_AXI_WVALID),
+      .S_AXI_BREADY         (S_AXI_BREADY),
+      .S_AXI_ARADDR         (S_AXI_ARADDR),
+      .S_AXI_ARVALID        (S_AXI_ARVALID),
+      .S_AXI_RREADY         (S_AXI_RREADY),
+      .S_AXI_ARREADY        (S_AXI_ARREADY),
+      .S_AXI_RDATA          (S_AXI_RDATA),
+      .S_AXI_RRESP          (S_AXI_RRESP),
+      .S_AXI_RVALID         (S_AXI_RVALID),
+      .S_AXI_WREADY         (S_AXI_WREADY),
+      .S_AXI_BRESP          (S_AXI_BRESP),
+      .S_AXI_BVALID         (S_AXI_BVALID),
+      .S_AXI_AWREADY        (S_AXI_AWREADY),
       // Register ports
-      .id_reg              (id_reg),
-      .version_reg         (version_reg),
-      .reset_reg           (reset_reg),
-      .ip2cpu_flip_reg     (ip2cpu_flip_reg),
-      .cpu2ip_flip_reg     (cpu2ip_flip_reg),
-      .ip2cpu_debug_reg    (ip2cpu_debug_reg),
-      .cpu2ip_debug_reg    (cpu2ip_debug_reg),
-      .pktin_reg           (pktin_reg),
-      .pktin_reg_clear     (pktin_reg_clear),
-      .pktout_reg          (pktout_reg),
-      .pktout_reg_clear    (pktout_reg_clear),
-      .icmpout_reg         (icmpout_reg),
-      .icmpout_reg_clear   (icmpout_reg_clear),
-      .ip2cpu_tgtipaddr_reg(ip2cpu_tgtipaddr_reg),
-      .cpu2ip_tgtipaddr_reg(cpu2ip_tgtipaddr_reg),
-      .tgtipout_reg        (tgtipout_reg),
-      .tgtipout_reg_clear  (tgtipout_reg_clear),
-      .tgtipoutlst_reg     (tgtipoutlst_reg),
+      .id_reg               (id_reg),
+      .version_reg          (version_reg),
+      .reset_reg            (reset_reg),
+      .ip2cpu_flip_reg      (ip2cpu_flip_reg),
+      .cpu2ip_flip_reg      (cpu2ip_flip_reg),
+      .ip2cpu_debug_reg     (ip2cpu_debug_reg),
+      .cpu2ip_debug_reg     (cpu2ip_debug_reg),
+      .pktin_reg            (pktin_reg),
+      .pktin_reg_clear      (pktin_reg_clear),
+      .pktout_reg           (pktout_reg),
+      .pktout_reg_clear     (pktout_reg_clear),
+      .icmpout_reg          (icmpout_reg),
+      .icmpout_reg_clear    (icmpout_reg_clear),
+      .ip2cpu_tgtipaddr_reg (ip2cpu_tgtipaddr_reg),
+      .cpu2ip_tgtipaddr_reg (cpu2ip_tgtipaddr_reg),
+      .tgtipout_reg         (tgtipout_reg),
+      .tgtipout_reg_clear   (tgtipout_reg_clear),
+      .tgtipoutlst_reg      (tgtipoutlst_reg),
+      .ip2cpu_tgtudpport_reg(ip2cpu_tgtudpport_reg),
+      .cpu2ip_tgtudpport_reg(cpu2ip_tgtudpport_reg),
+      .tgtudpcnt_reg        (tgtudpcnt_reg),
 
       // Global Registers - user can select if to use
       .cpu_resetn_soft(),  // software reset, after cpu module
@@ -357,18 +371,21 @@ module nic_output_port_lookup #(
     id_reg      <= #1 `REG_ID_DEFAULT;
     version_reg <= #1 `REG_VERSION_DEFAULT;
     if (~resetn_sync | reset_registers) begin
-      ip2cpu_flip_reg      <= #1 `REG_FLIP_DEFAULT;
-      pktin_reg            <= #1 `REG_PKTIN_DEFAULT;
-      pktout_reg           <= #1 `REG_PKTOUT_DEFAULT;
-      ip2cpu_debug_reg     <= #1 `REG_DEBUG_DEFAULT;
-      icmpout_reg          <= #1 `REG_ICMPOUT_DEFAULT;
-      ip2cpu_tgtipaddr_reg <= #1 `REG_TGTIPADDR_DEFAULT;
-      tgtipout_reg         <= #1 `REG_TGTIPOUT_DEFAULT;
-      tgtipoutlst_reg      <= #1 `REG_TGTIPOUTLST_DEFAULT;
+      ip2cpu_flip_reg       <= #1 `REG_FLIP_DEFAULT;
+      pktin_reg             <= #1 `REG_PKTIN_DEFAULT;
+      pktout_reg            <= #1 `REG_PKTOUT_DEFAULT;
+      ip2cpu_debug_reg      <= #1 `REG_DEBUG_DEFAULT;
+      icmpout_reg           <= #1 `REG_ICMPOUT_DEFAULT;
+      ip2cpu_tgtipaddr_reg  <= #1 `REG_TGTIPADDR_DEFAULT;
+      tgtipout_reg          <= #1 `REG_TGTIPOUT_DEFAULT;
+      tgtipoutlst_reg       <= #1 `REG_TGTIPOUTLST_DEFAULT;
+      ip2cpu_tgtudpport_reg <= #1 `REG_TGTUDPPORT_DEFAULT;
+      tgtudpcnt_reg         <= #1 `REG_TGTUDPCNT_DEFAULT;
     end else begin
-      ip2cpu_flip_reg <= #1 ~cpu2ip_flip_reg;
-      ip2cpu_debug_reg <= #1 `REG_DEBUG_DEFAULT + cpu2ip_debug_reg;
-      ip2cpu_tgtipaddr_reg <= #1 cpu2ip_tgtipaddr_reg;
+      ip2cpu_flip_reg       <= #1 ~cpu2ip_flip_reg;
+      ip2cpu_debug_reg      <= #1 `REG_DEBUG_DEFAULT + cpu2ip_debug_reg;
+      ip2cpu_tgtipaddr_reg  <= #1 cpu2ip_tgtipaddr_reg;
+      ip2cpu_tgtudpport_reg <= #1 cpu2ip_tgtudpport_reg;
 
       // Verible has some bugs here when disable formatter
       pktin_reg <= #1 clear_counters | pktin_reg_clear ? 'h0 : {  // Clear
@@ -394,6 +411,11 @@ module nic_output_port_lookup #(
       tgtipoutlst_reg <= #1 clear_counters ? 'h0  // Clear
       : (ip2cpu_tgtipaddr_reg != cpu2ip_tgtipaddr_reg) ? tgtipout_reg // Update on target IP change
       : tgtipoutlst_reg;
+
+      tgtudpcnt_reg <= #1 clear_counters ? 'h0 // Clear
+      : (is_udp && is_tgt_udp_src_ip && is_tgt_udp_dst_ip && is_tgt_udp_sp && (udp_dp == ip2cpu_tgtudpport_reg))
+      ? tgtudpcnt_reg + // TODO !!!
+       : tgtudpcnt_reg;  // Counter
 
     end
   end

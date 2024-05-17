@@ -69,6 +69,9 @@ module output_port_lookup_cpu_regs #(
     input      [   `REG_TGTIPOUT_BITS] tgtipout_reg,
     output reg                         tgtipout_reg_clear,
     input      [`REG_TGTIPOUTLST_BITS] tgtipoutlst_reg,
+    input      [ `REG_TGTUDPPORT_BITS] ip2cpu_tgtudpport_reg,
+    output reg [ `REG_TGTUDPPORT_BITS] cpu2ip_tgtudpport_reg,
+    input      [  `REG_TGTUDPCNT_BITS] tgtudpcnt_reg,
 
     // AXI Lite ports
     input                               S_AXI_ACLK,
@@ -286,9 +289,10 @@ module output_port_lookup_cpu_regs #(
   //R/W register, not cleared
   always @(posedge clk) begin
     if (!resetn_sync) begin
-      cpu2ip_flip_reg      <= #1 `REG_FLIP_DEFAULT;
-      cpu2ip_debug_reg     <= #1 `REG_DEBUG_DEFAULT;
-      cpu2ip_tgtipaddr_reg <= #1 `REG_TGTIPADDR_DEFAULT;
+      cpu2ip_flip_reg       <= #1 `REG_FLIP_DEFAULT;
+      cpu2ip_debug_reg      <= #1 `REG_DEBUG_DEFAULT;
+      cpu2ip_tgtipaddr_reg  <= #1 `REG_TGTIPADDR_DEFAULT;
+      cpu2ip_tgtudpport_reg <= #1 `REG_TGTUDPPORT_DEFAULT;
     end else begin
       if (reg_wren)  //write event
         case (axi_awaddr)
@@ -315,11 +319,20 @@ module output_port_lookup_cpu_regs #(
           `REG_TGTIPADDR_ADDR: begin
             for (
                 byte_index = 0;
-                byte_index <= (`REG_DEBUG_WIDTH / 8 - 1);
+                byte_index <= (`REG_TGTIPADDR_WIDTH / 8 - 1);
                 byte_index = byte_index + 1
             )
             if (S_AXI_WSTRB[byte_index] == 1)  // dynamic register;
               cpu2ip_tgtipaddr_reg[byte_index*8+:8] <= S_AXI_WDATA[byte_index*8+:8];
+          end
+          `REG_TGTUDPPORT_ADDR: begin
+            for (
+                byte_index = 0;
+                byte_index <= (`REG_TGTUDPPORT_WIDTH / 8 - 1);
+                byte_index = byte_index + 1
+            )
+            if (S_AXI_WSTRB[byte_index] == 1)  // dynamic register;
+              cpu2ip_tgtudpport_reg[byte_index*8+:8] <= S_AXI_WDATA[byte_index*8+:8];
           end
           default: ;
         endcase
@@ -352,6 +365,8 @@ module output_port_lookup_cpu_regs #(
       `REG_TGTIPADDR_ADDR:   reg_data_out[`REG_TGTIPADDR_BITS] = ip2cpu_tgtipaddr_reg;
       `REG_TGTIPOUT_ADDR:    reg_data_out[`REG_TGTIPOUT_BITS] = tgtipout_reg;
       `REG_TGTIPOUTLST_ADDR: reg_data_out[`REG_TGTIPOUTLST_BITS] = tgtipoutlst_reg;
+      `REG_TGTUDPPORT_ADDR:  reg_data_out[`REG_TGTUDPPORT_BITS] = ip2cpu_tgtudpport_reg;
+      `REG_TGTUDPCNT_ADDR:   reg_data_out[`REG_TGTUDPCNT_BITS] = tgtudpcnt_reg;
       default:               reg_data_out[31:0] = 32'hFEE1DEAD;  //Default return value
     endcase
   end  // end of assigning data to IP2Bus_Data bus
